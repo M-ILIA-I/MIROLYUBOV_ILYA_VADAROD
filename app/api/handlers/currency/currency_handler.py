@@ -5,6 +5,7 @@ from app.api.currency.response_schema import CurrencyListResponse, CurrencyRespo
 import requests
 import datetime
 import os 
+import re
 
 
 load_dotenv()
@@ -13,10 +14,20 @@ load_dotenv()
 class CurrencyHandler:
     def __init__(self):
         self.api_url = os.getenv("NBRB_API_URL")
+
     
+    def validate_date_format(self, date: str):
+        """Проверка формата даты 'YYYY-MM-DD'"""
+        # Регулярное выражение для проверки формата даты
+        pattern = re.compile(r"^\d{4}-\d{2}-\d{2}$")
+        if not pattern.match(date):
+            raise HTTPException(status_code=422, detail="Invalid date format. Date must be in YYYY-MM-DD format.")
+
     
     async def get_exchange_rates_by_date(self, date:str, response: Response):
         try:
+            self.validate_date_format(date=date)
+            
             date_obj = datetime.datetime.strptime(date, "%Y-%m-%d")
             
             url = f"{self.api_url}?ondate={date_obj.strftime('%Y-%m-%d')}&periodicity=0"
@@ -31,13 +42,15 @@ class CurrencyHandler:
             response.headers["X-CRC32"] = crc32_value
             return CurrencyListResponse(status="ok", message="The currency was successfully received", data=data)
 
-        except Exception as e:
-            raise HTTPException(status_code=500, detail="Internal Server Error")
+        except HTTPException as e:
+            return e
         
         
     async def get_exchange_rate(self, date: str, currency_code: str, response: Response):
         """Получить курс валюты на указанную дату"""
         try:
+            self.validate_date_format(date=date)
+            
             date_obj = datetime.datetime.strptime(date, "%Y-%m-%d")
             
             if date_obj.date() > datetime.datetime.now().date():
@@ -76,4 +89,4 @@ class CurrencyHandler:
             return CurrencyResponse(status="ok", message="The currency was successfully received", trend=trend, data=data)
 
         except HTTPException as e:
-            raise HTTPException(status_code=500, detail=str(e))
+            return e
