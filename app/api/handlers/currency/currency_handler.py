@@ -1,6 +1,7 @@
-from fastapi import HTTPException
+from fastapi import HTTPException, Response
 from dotenv import load_dotenv
 from utils.get_crc32 import get_crc32
+from app.api.currency.response_schema import CurrencyListResponse, CurrencyResponse
 import requests
 import datetime
 import os 
@@ -10,23 +11,69 @@ load_dotenv()
 
 
 class CurrencyHandler:
-    async def get_exchange_rates_by_date(date:str):
+    def __init__(self):
+        self.api_url = os.getenv("NBRB_API_URL")
+    
+    
+    async def get_exchange_rates_by_date(self, date:str, response: Response):
         try:
-            date_obj = datetime.strptime(date, "%Y-%m-%d")
-            url = f"{os.getenv("NBRB_API_URL")}?ondate={date_obj.strftime('%Y-%m-%d')}&periodicity=0"
+            date_obj = datetime.datetime.strptime(date, "%Y-%m-%d")
+            
+            url = f"{self.api_url}?ondate={date_obj.strftime('%Y-%m-%d')}&periodicity=0"
             api_response = requests.get(url)
             
             if api_response.status_code != 200:
                 raise HTTPException(status_code=api_response.status_code, detail="Failed to fetch data from NBRB API")
 
             data = api_response.json()
-            print(data)
-            
             crc32_value = get_crc32(api_response.text)
-            print(crc32_value)
             
-            # response.headers["X-CRC32"] = crc32_value
-            return data
+            response.headers["X-CRC32"] = crc32_value
+            return CurrencyListResponse(status="ok", message="The currency was successfully received", data=data)
 
         except Exception as e:
             raise HTTPException(status_code=500, detail="Internal Server Error")
+        
+        
+    async def get_exchange_rate(self, date: str, currency_code: str, response: Response):
+        """Получить курс валюты на указанную дату"""
+        try:
+            date_obj = datetime.datetime.strptime(date, "%Y-%m-%d")
+            
+            if date_obj.date() > datetime.datetime.now().date():
+                raise HTTPException(status_code=400, detail="Incorrect date")
+            
+            url = f"{self.api_url}/{currency_code}?ondate={date_obj.strftime('%Y-%m-%d')}&periodicity=0"
+            api_response = requests.get(url)
+            
+            if api_response.status_code != 200:
+                raise HTTPException(status_code=api_response.status_code, detail="Failed to fetch data from NBRB API. This currency id probably does not exist.")
+            
+            data = api_response.json()
+            previous_date_obj = date_obj - datetime.timedelta(days=1)
+            previous_url = f"{self.api_url}/{currency_code}?ondate={previous_date_obj.strftime('%Y-%m-%d')}&periodicity=0"
+            previous_response = requests.get(previous_url)
+            
+            if previous_response.status_code == 200:
+                previous_data = previous_response.json()
+                previous_rate = previous_data.get("Cur_OfficialRate", None)
+                current_rate = data.get("Cur_OfficialRate", None)
+                if previous_rate and current_rate:
+                    if current_rate > previous_rate:
+                        trend = "increased"
+                    elif current_rate < previous_rate:
+                        trend = "decreased"
+                    else:
+                        trend = "unchanged"
+                    
+                else:
+                    trend = "unknown"
+            else:
+                trend = "unknown"
+
+            crc32_value = get_crc32(api_response.text)
+            response.headers["X-CRC32"] = crc32_value
+            return CurrencyResponse(status="ok", message="The currency was successfully received", trend=trend, data=data)
+
+        except HTTPException as e:
+            raise HTTPException(status_code=500, detail=str(e))

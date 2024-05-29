@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from dotenv import load_dotenv
+from .api.currency import exchange_rate_router
 import uvicorn
 import os
 
@@ -12,11 +13,12 @@ app = FastAPI(
     version="1",
     contact={
         "name": "MIROLYUBOV ILYA",
-        "url": "@ILIAMV - tg",
+        "url": "https://github.com/M-ILIA-I/MIROLYUBOV_ILYA_VODOROD",
         "email": "ilyamir1@mail.ru",
     }
 )
 
+app.include_router(exchange_rate_router)
 
 if __name__ == "__main__":
     uvicorn.run(
