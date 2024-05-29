@@ -1,8 +1,8 @@
 import logging
 
 # Создаем файл обработчики
-file_handler_request = logging.FileHandler("requests.log")
-file_handler_response = logging.FileHandler("responses.log")
+file_handler_request = logging.FileHandler("requests.log", encoding='utf-8')
+file_handler_response = logging.FileHandler("responses.log", encoding='utf-8')
 
 # Настраиваем логгер для запросов
 request_logger = logging.getLogger("request_logger")
