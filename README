@@ -1,0 +1,41 @@
+# MIROLYUBOV ILYA VODOROD TEST TASK
+
+Installing and activating virtual environment:
+
+    python -m venv venv
+    source venv/bin/activate
+
+Deactivating:
+
+    deactivate
+
+Installing dependencies:
+
+    pip install -r requirements.txt
+
+Creating .env file:
+
+    DATABASE_URL=postgresql+asyncpg://postgres:12345@localhost:5432/server_db
+    ALEMBIC_URL=postgresql://postgres@localhost:5432/server_db
+
+    HOST=localhost
+    PORT=8000
+
+    NBRB_API_URL=https://api.nbrb.by/exrates/rates
+
+
+## Database Migrations
+
+    alembic upgrade head
+
+## Runing
+
+    uvicorn app.app:app --reload
+
+<hr>
+
+## Runing with docker
+
+    docker-compose -f docker-compose up
+
+### Developed by [Mirolyubov Ilya](https://github.com/M-ILIA-I)

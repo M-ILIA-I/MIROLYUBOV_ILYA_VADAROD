@@ -12,5 +12,5 @@ async def get_exchange_rates_by_date_and_currency_id(
     response: Response,
     handler: CurrencyHandler = Depends(CurrencyHandler),
 ):
-    """information about the exchange rate"""
+    """информация об обменном курсе"""
     return await handler.get_exchange_rate(date=date, currency_code=currency_code, response=response)

@@ -11,5 +11,5 @@ async def get_exchange_rates_by_date(
     date: str = Path(..., title="the specified day", description="you must pass the date in the following format: yyyy-mm-dd"),
     handler: CurrencyHandler = Depends(CurrencyHandler),
 ):
-    """information about the exchange rate for the specified day"""
+    """информация о курсе обмена валют на указанный день"""
     return await handler.get_exchange_rates_by_date(date, response=response)

@@ -1,7 +1,9 @@
-from fastapi import HTTPException, Response
+from fastapi import HTTPException, Response, Depends
 from dotenv import load_dotenv
 from utils.get_crc32 import get_crc32
 from app.api.currency.response_schema import CurrencyListResponse, CurrencyResponse
+from sqlalchemy.ext.asyncio import AsyncSession
+from database.db_connection import get_async_session
 import requests
 import datetime
 import os 
@@ -12,7 +14,8 @@ load_dotenv()
 
 
 class CurrencyHandler:
-    def __init__(self):
+    def __init__(self, session: AsyncSession = Depends(get_async_session)):
+        self.session = session
         self.api_url = os.getenv("NBRB_API_URL")
 
     
