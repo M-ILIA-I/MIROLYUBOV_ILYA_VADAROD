@@ -13,18 +13,18 @@ Installing dependencies:
 
     pip install -r requirements.txt
 
-Creating .env file:
+Creating .env file (example):
 
-    DATABASE_URL=postgresql+asyncpg://postgres:12345@localhost:5432/server_db
-    ALEMBIC_URL=postgresql://postgres@localhost:5432/server_db
+    DATABASE_URL=postgresql+asyncpg://(user):(password)@(host):(port)/(db_name)
+    ALEMBIC_URL=postgresql://(user):(password)@(host):(port)/(db_name)
 
     HOST=localhost
     PORT=8000
 
-    NBRB_API_URL=https://api.nbrb.by/exrates/rates
+    NBRB_API_URL=https://api.nbrb.by/exrates/rates --> required
 
 
-## Database Migrations
+## Database Migrations (at first you must create your db)
 
     alembic upgrade head
 
