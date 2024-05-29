@@ -4,6 +4,8 @@ from utils.get_crc32 import get_crc32
 from app.api.currency.response_schema import CurrencyListResponse, CurrencyResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 from database.db_connection import get_async_session
+from sqlalchemy.future import select
+from database.models import CurrencyRate
 import requests
 import datetime
 import os 
@@ -14,6 +16,7 @@ load_dotenv()
 
 
 class CurrencyHandler:
+
     def __init__(self, session: AsyncSession = Depends(get_async_session)):
         self.session = session
         self.api_url = os.getenv("NBRB_API_URL")
@@ -21,7 +24,7 @@ class CurrencyHandler:
     
     def validate_date_format(self, date: str):
         """Проверка формата даты 'YYYY-MM-DD'"""
-        # Регулярное выражение для проверки формата даты
+
         pattern = re.compile(r"^\d{4}-\d{2}-\d{2}$")
         if not pattern.match(date):
             raise HTTPException(status_code=422, detail="Invalid date format. Date must be in YYYY-MM-DD format.")
@@ -43,6 +46,21 @@ class CurrencyHandler:
             crc32_value = get_crc32(api_response.text)
             
             response.headers["X-CRC32"] = crc32_value
+
+            if data:
+                currency_rate_object = await self.session.get(CurrencyRate, str(date_obj))
+                
+                if currency_rate_object:
+                    currency_rate_object.data = data
+                    await self.session.commit()
+                else:
+                    currency_rate_object = CurrencyRate(
+                        date=str(date_obj),
+                        data=data
+                    )
+                    self.session.add(currency_rate_object)
+                    await self.session.commit()
+                    
             return CurrencyListResponse(status="ok", message="The currency was successfully received", data=data)
 
         except HTTPException as e:
