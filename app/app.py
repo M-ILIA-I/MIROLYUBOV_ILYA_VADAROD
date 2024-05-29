@@ -11,7 +11,7 @@ load_dotenv()
 
 app = FastAPI(
     title="My Awesome API",
-    description="This is a test project for VODOROD",
+    description="This is a test project for VADAROD",
     version="1",
     contact={
         "name": "MIROLYUBOV ILYA",
