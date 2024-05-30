@@ -32,10 +32,5 @@ Creating .env file (example):
 
     uvicorn app.app:app --reload
 
-<hr>
-
-## Runing with docker
-
-    docker-compose -f docker-compose up
 
 ### Developed by [Mirolyubov Ilya](https://github.com/M-ILIA-I)
